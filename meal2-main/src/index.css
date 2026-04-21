@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-headline: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-label: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: #4F46E5;
+  --color-primary-dim: #4338CA;
+  --color-primary-container: #EEF2FF;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #4F46E5;
+
+  --color-secondary: #10B981;
+  --color-secondary-dim: #059669;
+  --color-secondary-container: #ECFDF5;
+  --color-on-secondary: #FFFFFF;
+  --color-on-secondary-container: #10B981;
+
+  --color-tertiary: #F59E0B;
+  --color-tertiary-dim: #D97706;
+  --color-tertiary-container: #FFFBEB;
+  --color-on-tertiary: #FFFFFF;
+  --color-on-tertiary-container: #F59E0B;
+
+  --color-surface: #F8FAFC;
+  --color-on-surface: #0F172A;
+  --color-on-surface-variant: #64748B;
+  --color-surface-container-lowest: #FFFFFF;
+  --color-surface-container-low: #F1F5F9;
+  --color-surface-container: #E2E8F0;
+  --color-surface-container-high: #CBD5E1;
+  --color-surface-container-highest: #94A3B8;
+  
+  --color-outline: #94A3B8;
+  --color-outline-variant: #E2E8F0;
+  
+  --color-error: #EF4444;
+  --color-on-error: #FFFFFF;
+}
+
+@layer base {
+  body {
+    @apply font-body bg-surface text-on-surface antialiased;
+  }
+}
+
+@layer components {
+  .editorial-gradient {
+    background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+  }
+  
+  .hero-gradient {
+    background: radial-gradient(circle at top left, #EEF2FF 0%, #F8FAFC 100%);
+  }
+
+  .glass-layer {
+    @apply backdrop-blur-md bg-white/80 border border-white/20;
+  }
+
+  .editorial-shadow {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+}

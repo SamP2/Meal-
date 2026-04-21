@@ -1,0 +1,6 @@
+{
+  "name": "MessFinder",
+  "description": "Find trusted mess food near you. Discover daily menus, read authentic reviews, and manage your mess with ease.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": []
+}
