@@ -1,26 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useTheme } from '../context/ThemeContext';
-import { radius, fontSize, fontWeight } from '../theme';
+import { Ionicons } from '@expo/vector-icons';
 
-interface NavItem {
-  key: string;
-  label: string;
-  emoji: string;
-}
-
-const STUDENT_TABS: NavItem[] = [
-  { key: 'Discover', label: 'Discover', emoji: '🧭' },
-  { key: 'Saved', label: 'Saved', emoji: '🔖' },
-  { key: 'Updates', label: 'Updates', emoji: '🔔' },
-  { key: 'Profile', label: 'Profile', emoji: '👤' },
-];
-
-const OWNER_TABS: NavItem[] = [
-  { key: 'Dashboard', label: 'Today', emoji: '🏪' },
-  { key: 'MenuManagement', label: 'Menus', emoji: '📋' },
-  { key: 'OwnerReviews', label: 'Reviews', emoji: '⭐' },
-  { key: 'OwnerProfile', label: 'Account', emoji: '👤' },
+const OWNER_TABS = [
+  { key: 'Dashboard', label: 'Dashboard', icon: 'grid-outline'   as const, iconActive: 'grid'   as const },
+  { key: 'Account',   label: 'Account',   icon: 'person-outline' as const, iconActive: 'person' as const },
 ];
 
 interface Props {
@@ -29,23 +13,25 @@ interface Props {
   onTabPress: (key: string) => void;
 }
 
-export default function BottomNavBar({ role, activeTab, onTabPress }: Props) {
-  const { colors } = useTheme();
-  const tabs = role === 'student' ? STUDENT_TABS : OWNER_TABS;
-
+export default function BottomNavBar({ activeTab, onTabPress }: Props) {
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-      {tabs.map(tab => {
+    <View style={s.container}>
+      {OWNER_TABS.map(tab => {
         const isActive = activeTab === tab.key;
         return (
           <TouchableOpacity
             key={tab.key}
-            style={[styles.tab, isActive && { backgroundColor: colors.primaryLight }]}
+            style={s.tab}
             onPress={() => onTabPress(tab.key)}
             activeOpacity={0.7}
           >
-            <Text style={styles.emoji}>{tab.emoji}</Text>
-            <Text style={[styles.label, { color: isActive ? colors.primary : colors.textSecondary }]}>
+            {isActive && <View style={s.activePill} />}
+            <Ionicons
+              name={isActive ? tab.iconActive : tab.icon}
+              size={22}
+              color={isActive ? '#AB3500' : '#8D7168'}
+            />
+            <Text style={[s.label, isActive ? s.labelActive : s.labelInactive]}>
               {tab.label}
             </Text>
           </TouchableOpacity>
@@ -55,21 +41,38 @@ export default function BottomNavBar({ role, activeTab, onTabPress }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    paddingBottom: 24,
-    paddingTop: 8,
-    paddingHorizontal: 8,
+    backgroundColor: '#fff',
     borderTopWidth: 1,
+    borderTopColor: '#F4EBE4',
+    paddingTop: 10,
+    paddingBottom: 24,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 8,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 8,
-    borderRadius: radius.lg,
-    gap: 2,
+    justifyContent: 'center',
+    gap: 4,
+    position: 'relative',
+    paddingVertical: 4,
   },
-  emoji: { fontSize: 22 },
-  label: { fontSize: fontSize.xs, fontWeight: fontWeight.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
+  activePill: {
+    position: 'absolute',
+    top: -2,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFF1ED',
+  },
+  label: { fontSize: 11, fontWeight: '600', letterSpacing: 0.2 },
+  labelActive:   { color: '#AB3500' },
+  labelInactive: { color: '#8D7168' },
 });

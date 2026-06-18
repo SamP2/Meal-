@@ -2,320 +2,396 @@ import { Router, Request, Response } from 'express';
 import { authenticate } from '../middleware/authenticate';
 import { requireRole } from '../middleware/requireRole';
 import { supabase } from '../lib/supabase';
-import { MenuItemInput } from '../types';
 
-const router = Router({ mergeParams: true });
+const router = Router();
 
-// GET /messes/:messId/menu — student only
-router.get(
-  '/',
-  authenticate,
-  requireRole('student'),
-  async (req: Request, res: Response): Promise<void> => {
-    const { messId } = req.params;
-    const { date } = req.query as { date?: string };
+// GET /messes/mine-with-menus — Optimized endpoint with menus included
+router.get('/mine-with-menus', authenticate, requireRole('mess_owner'), async (req: Request, res: Response): Promise<void> => {
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
-    if (!date) {
-      res.status(400).json({ error: 'VALIDATION_ERROR', message: 'date query param is required (YYYY-MM-DD)' });
+  try {
+    // Get all messes owned by user
+    const { data: messes, error: messError } = await supabase
+      .from('messes')
+      .select('*')
+      .eq('owner_id', req.user!.id);
+
+    if (messError) {
+      res.status(500).json({ error: 'INTERNAL_ERROR', message: messError.message });
       return;
     }
 
-    const { data: menu, error } = await supabase
+    if (!messes || messes.length === 0) {
+      res.json([]);
+      return;
+    }
+
+    // Get all menus for today for these messes
+    const messIds = messes.map(m => m.id);
+    const { data: menus, error: menuError } = await supabase
       .from('menus')
-      .select('*, items:menu_items(id, name, price, sort_order, created_at)')
-      .eq('mess_id', messId)
-      .eq('date', date)
-      .order('sort_order', { referencedTable: 'menu_items', ascending: true })
-      .maybeSingle();
+      .select('id, mess_id, meal_type')
+      .in('mess_id', messIds)
+      .eq('date', today);
 
-    if (error) {
-      res.status(500).json({ error: 'INTERNAL_ERROR', message: error.message });
-      return;
+    if (menuError) {
+      console.error('Menu fetch error:', menuError);
+      // Continue without menus
     }
+
+    // Get all menu items for these menus
+    let menuItemsMap = new Map();
+    if (menus && menus.length > 0) {
+      const menuIds = menus.map(m => m.id);
+      const { data: menuItems } = await supabase
+        .from('menu_items')
+        .select('menu_id, name, price')
+        .in('menu_id', menuIds)
+        .order('sort_order');
+
+      if (menuItems) {
+        // Group items by menu_id
+        menuItems.forEach(item => {
+          if (!menuItemsMap.has(item.menu_id)) {
+            menuItemsMap.set(item.menu_id, []);
+          }
+          menuItemsMap.get(item.menu_id).push(item);
+        });
+      }
+    }
+
+    // Combine data
+    const result = messes.map(mess => {
+      const lunchMenu = menus?.find(m => m.mess_id === mess.id && m.meal_type === 'lunch');
+      const dinnerMenu = menus?.find(m => m.mess_id === mess.id && m.meal_type === 'dinner');
+
+      let lunch = null;
+      let dinner = null;
+
+      if (lunchMenu) {
+        const items = menuItemsMap.get(lunchMenu.id) || [];
+        if (items.length > 0) {
+          lunch = {
+            items: items.map((item: any) => item.name),
+            price: items[0].price,
+          };
+        }
+      }
+
+      if (dinnerMenu) {
+        const items = menuItemsMap.get(dinnerMenu.id) || [];
+        if (items.length > 0) {
+          dinner = {
+            items: items.map((item: any) => item.name),
+            price: items[0].price,
+          };
+        }
+      }
+
+      return {
+        id: mess.id,
+        name: mess.name,
+        address: mess.address,
+        is_open: mess.is_open,
+        verified: mess.verified || false,
+        verification_status: mess.verification_status || 'pending',
+        cover_image_url: mess.cover_image_url || null,
+        lunch,
+        dinner,
+      };
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching messes with menus:', error);
+    res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Failed to fetch messes' });
+  }
+});
+
+// GET /menus/:messId/today — Get today's menu for a mess
+router.get('/:messId/today', authenticate, requireRole('mess_owner'), async (req: Request, res: Response): Promise<void> => {
+  const { messId } = req.params;
+  const { meal_type } = req.query;
+
+  // Verify mess ownership
+  const { data: mess, error: messError } = await supabase
+    .from('messes')
+    .select('*')
+    .eq('id', messId)
+    .single();
+
+  if (messError || !mess) {
+    res.status(404).json({ error: 'NOT_FOUND', message: 'Mess not found' });
+    return;
+  }
+
+  if (mess.owner_id !== req.user!.id) {
+    res.status(403).json({ error: 'FORBIDDEN', message: 'You do not own this mess' });
+    return;
+  }
+
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+  try {
+    // Get today's menu for specific meal_type
+    const { data: menu } = await supabase
+      .from('menus')
+      .select('id')
+      .eq('mess_id', messId)
+      .eq('date', today)
+      .eq('meal_type', meal_type || 'lunch')
+      .single();
 
     if (!menu) {
-      res.json({ date, items: [], message: 'No menu available for this day' });
+      res.json({ exists: false, menu: null });
       return;
     }
 
-    res.json({ date: menu.date, items: menu.items ?? [] });
+    // Get menu items
+    const { data: menuItems, error: itemsError } = await supabase
+      .from('menu_items')
+      .select('*')
+      .eq('menu_id', menu.id)
+      .order('sort_order');
+
+    if (itemsError) {
+      res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Failed to fetch menu items' });
+      return;
+    }
+
+    if (!menuItems || menuItems.length === 0) {
+      res.json({ exists: false, menu: null });
+      return;
+    }
+
+    // Extract items and price
+    const items = menuItems.map(item => item.name);
+
+    const price = menuItems[0]?.price || 0;
+
+    res.json({
+      exists: true,
+      menu: {
+        menu_id: menu.id,
+        items, // Now returns array
+        price,
+        meal_type: meal_type || 'lunch',
+        date: today,
+      },
+    });
+  } catch (error) {
+    console.error('Menu fetch error:', error);
+    res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Failed to fetch menu' });
   }
-);
+});
 
-// PUT /messes/:messId/menu/:date — mess_owner only (replace full menu atomically)
-router.put(
-  '/:date',
-  authenticate,
-  requireRole('mess_owner'),
-  async (req: Request, res: Response): Promise<void> => {
-    const { messId, date } = req.params;
-    const { items } = req.body as { items: MenuItemInput[] };
+// POST /menus — Create or update menu for today
+router.post('/', authenticate, requireRole('mess_owner'), async (req: Request, res: Response): Promise<void> => {
+  const { mess_id, meal_type, items, price } = req.body;
 
-    if (!Array.isArray(items)) {
-      res.status(400).json({ error: 'VALIDATION_ERROR', message: 'items must be an array' });
-      return;
-    }
+  // Validation
+  if (!mess_id || !meal_type || !items || !price) {
+    res.status(400).json({ 
+      error: 'VALIDATION_ERROR', 
+      message: 'mess_id, meal_type, items, and price are required' 
+    });
+    return;
+  }
 
-    // Validate each item
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (!item.name || typeof item.name !== 'string' || item.name.trim() === '') {
-        res.status(400).json({ error: 'VALIDATION_ERROR', field: `items[${i}].name`, message: 'Item name is required' });
-        return;
-      }
-      if (typeof item.price !== 'number' || item.price <= 0) {
-        res.status(400).json({ error: 'VALIDATION_ERROR', field: `items[${i}].price`, message: 'Item price must be a positive number' });
-        return;
-      }
-    }
+  if (!['lunch', 'dinner'].includes(meal_type)) {
+    res.status(400).json({ 
+      error: 'VALIDATION_ERROR', 
+      message: 'meal_type must be either "lunch" or "dinner"' 
+    });
+    return;
+  }
 
-    // Verify ownership
-    const { data: mess, error: messError } = await supabase
-      .from('messes')
-      .select('owner_id')
-      .eq('id', messId)
-      .single();
+  // Verify mess ownership
+  const { data: mess, error: messError } = await supabase
+    .from('messes')
+    .select('*')
+    .eq('id', mess_id)
+    .single();
 
-    if (messError || !mess) {
-      res.status(404).json({ error: 'NOT_FOUND', message: 'Mess not found' });
-      return;
-    }
+  if (messError || !mess) {
+    res.status(404).json({ error: 'NOT_FOUND', message: 'Mess not found' });
+    return;
+  }
 
-    if (mess.owner_id !== req.user!.id) {
-      res.status(403).json({ error: 'FORBIDDEN', message: 'You do not own this mess' });
-      return;
-    }
+  if (mess.owner_id !== req.user!.id) {
+    res.status(403).json({ error: 'FORBIDDEN', message: 'You do not own this mess' });
+    return;
+  }
 
-    // Upsert menu row
-    const { data: menu, error: menuError } = await supabase
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+  try {
+    // Check if menu exists for today + meal_type
+    const { data: existingMenu } = await supabase
       .from('menus')
-      .upsert({ mess_id: messId, date }, { onConflict: 'mess_id,date' })
-      .select()
+      .select('id')
+      .eq('mess_id', mess_id)
+      .eq('date', today)
+      .eq('meal_type', meal_type)
       .single();
 
-    if (menuError || !menu) {
-      res.status(500).json({ error: 'INTERNAL_ERROR', message: menuError?.message ?? 'Failed to upsert menu' });
+    let menuId: string;
+
+    if (existingMenu) {
+      // Update existing menu - delete old items
+      menuId = existingMenu.id;
+      
+      await supabase
+        .from('menu_items')
+        .delete()
+        .eq('menu_id', menuId);
+    } else {
+      // Create new menu with meal_type
+      const { data: newMenu, error: menuError } = await supabase
+        .from('menus')
+        .insert({ mess_id, date: today, meal_type })
+        .select()
+        .single();
+
+      if (menuError || !newMenu) {
+        console.error('Menu creation error:', menuError);
+        res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Failed to create menu' });
+        return;
+      }
+
+      menuId = newMenu.id;
+    }
+
+    // Parse items - accept both array and string formats
+    let itemsList: string[];
+    if (Array.isArray(items)) {
+      itemsList = items.filter((item: string) => item && item.trim());
+    } else if (typeof items === 'string') {
+      itemsList = items.split(',').map((item: string) => item.trim()).filter((item: string) => item);
+    } else {
+      res.status(400).json({ error: 'VALIDATION_ERROR', message: 'items must be an array or comma-separated string' });
       return;
     }
 
-    // Delete existing items then insert new ones (atomic replacement)
-    const { error: deleteError } = await supabase
+    if (itemsList.length === 0) {
+      res.status(400).json({ error: 'VALIDATION_ERROR', message: 'At least one menu item is required' });
+      return;
+    }
+    
+    const menuItems = itemsList.map((itemName: string, index: number) => ({
+      menu_id: menuId,
+      name: itemName, // store clean name — meal_type is on the parent menus row
+      price: parseFloat(price),
+      sort_order: index,
+    }));
+
+    const { error: itemsError } = await supabase
+      .from('menu_items')
+      .insert(menuItems);
+
+    if (itemsError) {
+      console.error('Menu items creation error:', itemsError);
+      res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Failed to create menu items' });
+      return;
+    }
+
+    res.status(201).json({ 
+      message: 'Menu updated successfully',
+      menu_id: menuId,
+      date: today,
+      meal_type,
+      items: itemsList,
+      price,
+    });
+  } catch (error) {
+    console.error('Menu creation error:', error);
+    res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Failed to update menu' });
+  }
+});
+
+// DELETE /menus/:messId/today — Delete today's menu for a specific meal type
+router.delete('/:messId/today', authenticate, requireRole('mess_owner'), async (req: Request, res: Response): Promise<void> => {
+  const { messId } = req.params;
+  const meal_type = req.query.meal_type as string;
+
+  // Validation
+  if (!meal_type || !['lunch', 'dinner'].includes(meal_type)) {
+    res.status(400).json({ 
+      error: 'VALIDATION_ERROR', 
+      message: 'meal_type query parameter is required and must be "lunch" or "dinner"' 
+    });
+    return;
+  }
+
+  // Verify mess ownership
+  const { data: mess, error: messError } = await supabase
+    .from('messes')
+    .select('*')
+    .eq('id', messId)
+    .single();
+
+  if (messError || !mess) {
+    res.status(404).json({ error: 'NOT_FOUND', message: 'Mess not found' });
+    return;
+  }
+
+  if (mess.owner_id !== req.user!.id) {
+    res.status(403).json({ error: 'FORBIDDEN', message: 'You do not own this mess' });
+    return;
+  }
+
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+  try {
+    // Find today's menu for the specific meal type
+    const { data: menu } = await supabase
+      .from('menus')
+      .select('id')
+      .eq('mess_id', messId)
+      .eq('date', today)
+      .eq('meal_type', meal_type)
+      .single();
+
+    if (!menu) {
+      res.status(404).json({ error: 'NOT_FOUND', message: 'Menu not found for today' });
+      return;
+    }
+
+    // Delete menu items first (foreign key constraint)
+    const { error: itemsError } = await supabase
       .from('menu_items')
       .delete()
       .eq('menu_id', menu.id);
 
-    if (deleteError) {
-      res.status(500).json({ error: 'INTERNAL_ERROR', message: deleteError.message });
+    if (itemsError) {
+      console.error('Failed to delete menu items:', itemsError);
+      res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Failed to delete menu items' });
       return;
     }
 
-    if (items.length > 0) {
-      const rows = items.map((item, idx) => ({
-        menu_id: menu.id,
-        name: item.name.trim(),
-        price: item.price,
-        sort_order: idx,
-      }));
-
-      const { error: insertError } = await supabase.from('menu_items').insert(rows);
-      if (insertError) {
-        res.status(500).json({ error: 'INTERNAL_ERROR', message: insertError.message });
-        return;
-      }
-    }
-
-    // Return stored menu
-    const { data: stored } = await supabase
-      .from('menu_items')
-      .select('id, name, price, sort_order')
-      .eq('menu_id', menu.id)
-      .order('sort_order', { ascending: true });
-
-    res.json({ date, items: stored ?? [] });
-  }
-);
-
-// DELETE /messes/:messId/menu/:date — mess_owner only
-router.delete(
-  '/:date',
-  authenticate,
-  requireRole('mess_owner'),
-  async (req: Request, res: Response): Promise<void> => {
-    const { messId, date } = req.params;
-
-    // Verify ownership
-    const { data: mess, error: messError } = await supabase
-      .from('messes')
-      .select('owner_id')
-      .eq('id', messId)
-      .single();
-
-    if (messError || !mess) {
-      res.status(404).json({ error: 'NOT_FOUND', message: 'Mess not found' });
-      return;
-    }
-
-    if (mess.owner_id !== req.user!.id) {
-      res.status(403).json({ error: 'FORBIDDEN', message: 'You do not own this mess' });
-      return;
-    }
-
-    const { data: menu, error: menuError } = await supabase
+    // Delete the menu
+    const { error: menuError } = await supabase
       .from('menus')
-      .select('id')
-      .eq('mess_id', messId)
-      .eq('date', date)
-      .maybeSingle();
+      .delete()
+      .eq('id', menu.id);
 
-    if (menuError || !menu) {
-      res.status(404).json({ error: 'NOT_FOUND', message: 'No menu found for this date' });
+    if (menuError) {
+      console.error('Failed to delete menu:', menuError);
+      res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Failed to delete menu' });
       return;
     }
 
-    const { error: deleteError } = await supabase.from('menus').delete().eq('id', menu.id);
-    if (deleteError) {
-      res.status(500).json({ error: 'INTERNAL_ERROR', message: deleteError.message });
-      return;
-    }
-
-    res.status(204).send();
+    const mealTypeCapitalized = meal_type.charAt(0).toUpperCase() + meal_type.slice(1);
+    res.json({ 
+      message: `${mealTypeCapitalized} menu deleted successfully`,
+      deleted: true,
+      meal_type,
+      date: today,
+    });
+  } catch (error) {
+    console.error('Menu deletion error:', error);
+    res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Failed to delete menu' });
   }
-);
-
-// POST /messes/:messId/menu/:date/items — add single item
-router.post(
-  '/:date/items',
-  authenticate,
-  requireRole('mess_owner'),
-  async (req: Request, res: Response): Promise<void> => {
-    const { messId, date } = req.params;
-    const { name, price } = req.body as MenuItemInput;
-
-    if (!name || typeof name !== 'string' || name.trim() === '') {
-      res.status(400).json({ error: 'VALIDATION_ERROR', field: 'name', message: 'Item name is required' });
-      return;
-    }
-    if (typeof price !== 'number' || price <= 0) {
-      res.status(400).json({ error: 'VALIDATION_ERROR', field: 'price', message: 'Item price must be a positive number' });
-      return;
-    }
-
-    // Verify ownership
-    const { data: mess } = await supabase.from('messes').select('owner_id').eq('id', messId).single();
-    if (!mess || mess.owner_id !== req.user!.id) {
-      res.status(403).json({ error: 'FORBIDDEN', message: 'You do not own this mess' });
-      return;
-    }
-
-    const { data: menu, error: menuError } = await supabase
-      .from('menus')
-      .select('id')
-      .eq('mess_id', messId)
-      .eq('date', date)
-      .maybeSingle();
-
-    if (menuError || !menu) {
-      res.status(404).json({ error: 'NOT_FOUND', message: 'No menu found for this date' });
-      return;
-    }
-
-    // Get current max sort_order
-    const { data: lastItem } = await supabase
-      .from('menu_items')
-      .select('sort_order')
-      .eq('menu_id', menu.id)
-      .order('sort_order', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const sort_order = lastItem ? (lastItem.sort_order as number) + 1 : 0;
-
-    const { data: item, error: insertError } = await supabase
-      .from('menu_items')
-      .insert({ menu_id: menu.id, name: name.trim(), price, sort_order })
-      .select()
-      .single();
-
-    if (insertError) {
-      res.status(500).json({ error: 'INTERNAL_ERROR', message: insertError.message });
-      return;
-    }
-
-    res.status(201).json(item);
-  }
-);
-
-// PATCH /messes/:messId/menu/:date/items/:itemId — update single item
-router.patch(
-  '/:date/items/:itemId',
-  authenticate,
-  requireRole('mess_owner'),
-  async (req: Request, res: Response): Promise<void> => {
-    const { messId, itemId } = req.params;
-    const { name, price } = req.body as Partial<MenuItemInput>;
-
-    // Verify ownership
-    const { data: mess } = await supabase.from('messes').select('owner_id').eq('id', messId).single();
-    if (!mess || mess.owner_id !== req.user!.id) {
-      res.status(403).json({ error: 'FORBIDDEN', message: 'You do not own this mess' });
-      return;
-    }
-
-    const updates: Partial<{ name: string; price: number }> = {};
-    if (name !== undefined) {
-      if (typeof name !== 'string' || name.trim() === '') {
-        res.status(400).json({ error: 'VALIDATION_ERROR', field: 'name', message: 'Item name cannot be empty' });
-        return;
-      }
-      updates.name = name.trim();
-    }
-    if (price !== undefined) {
-      if (typeof price !== 'number' || price <= 0) {
-        res.status(400).json({ error: 'VALIDATION_ERROR', field: 'price', message: 'Item price must be a positive number' });
-        return;
-      }
-      updates.price = price;
-    }
-
-    const { data: item, error } = await supabase
-      .from('menu_items')
-      .update(updates)
-      .eq('id', itemId)
-      .select()
-      .single();
-
-    if (error || !item) {
-      res.status(404).json({ error: 'NOT_FOUND', message: 'Menu item not found' });
-      return;
-    }
-
-    res.json(item);
-  }
-);
-
-// DELETE /messes/:messId/menu/:date/items/:itemId — remove single item
-router.delete(
-  '/:date/items/:itemId',
-  authenticate,
-  requireRole('mess_owner'),
-  async (req: Request, res: Response): Promise<void> => {
-    const { messId, itemId } = req.params;
-
-    // Verify ownership
-    const { data: mess } = await supabase.from('messes').select('owner_id').eq('id', messId).single();
-    if (!mess || mess.owner_id !== req.user!.id) {
-      res.status(403).json({ error: 'FORBIDDEN', message: 'You do not own this mess' });
-      return;
-    }
-
-    const { error } = await supabase.from('menu_items').delete().eq('id', itemId);
-    if (error) {
-      res.status(500).json({ error: 'INTERNAL_ERROR', message: error.message });
-      return;
-    }
-
-    res.status(204).send();
-  }
-);
+});
 
 export default router;

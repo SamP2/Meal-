@@ -1,9 +1,15 @@
 import axios from 'axios';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
+import { API_BASE_URL as FALLBACK_API_URL } from '../constants';
 
-// On Android emulator, host machine is 10.0.2.2
-// On physical device on same WiFi, use your PC's local IP
-const isWeb = typeof document !== 'undefined';
-const BASE_URL = isWeb ? 'http://localhost:3000' : 'http://192.168.1.14:3000';
+// Get API base URL from app.json extra config, fallback to constants
+const BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || FALLBACK_API_URL;
+
+console.log('🌐 API Client initialized');
+console.log('📱 Platform:', Platform.OS);
+console.log('🔗 BASE_URL:', BASE_URL);
+console.log('🔧 Constants.expoConfig?.extra:', Constants.expoConfig?.extra);
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -20,6 +26,9 @@ export function setAuthToken(token: string | null): void {
 apiClient.interceptors.request.use((config) => {
   if (authToken) {
     config.headers.Authorization = `Bearer ${authToken}`;
+    console.log('🔐 Request with auth token (first 20 chars):', authToken.substring(0, 20) + '...');
+  } else {
+    console.log('⚠️ Request without auth token');
   }
   return config;
 });

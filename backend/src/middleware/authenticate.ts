@@ -1,16 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { supabase } from '../lib/supabase';
 import { UserRole } from '../types';
 
-interface SupabaseTokenPayload {
-  sub: string;
+interface SupabaseUser {
+  id: string;
   user_metadata?: {
     role?: UserRole;
   };
-  [key: string]: unknown;
 }
 
-export function authenticate(req: Request, res: Response, next: NextFunction): void {
+export async function authenticate(req: Request, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -19,18 +18,18 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
   }
 
   const token = authHeader.slice(7);
-  const secret = process.env.SUPABASE_JWT_SECRET;
-
-  if (!secret) {
-    res.status(500).json({ error: 'INTERNAL_ERROR', message: 'JWT secret not configured' });
-    return;
-  }
 
   try {
-    const decoded = jwt.verify(token, secret) as SupabaseTokenPayload;
+    // Use Supabase client to verify the token
+    const { data: { user }, error } = await supabase.auth.getUser(token);
 
-    const id = decoded.sub;
-    const role = decoded.user_metadata?.role;
+    if (error || !user) {
+      res.status(401).json({ error: 'UNAUTHORIZED', message: 'Invalid or expired token' });
+      return;
+    }
+
+    const id = user.id;
+    const role = (user as SupabaseUser).user_metadata?.role;
 
     if (!id || !role) {
       res.status(401).json({ error: 'UNAUTHORIZED', message: 'Invalid token claims' });
@@ -39,7 +38,8 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
 
     req.user = { id, role };
     next();
-  } catch {
+  } catch (error) {
+    console.error('Authentication error:', error);
     res.status(401).json({ error: 'UNAUTHORIZED', message: 'Invalid or expired token' });
   }
 }

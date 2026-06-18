@@ -18,6 +18,9 @@
       "newArchEnabled": false,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Mess Finder needs your location to show nearby messes."
+      },
+      "config": {
+        "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY_HERE"
       }
     },
     "android": {
@@ -27,11 +30,22 @@
       },
       "package": "com.messfinder.app",
       "newArchEnabled": false,
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY_HERE"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-location"]
+    "plugins": ["expo-location"],
+    "extra": {
+      "apiBaseUrl": "http://192.168.1.14:3000",
+      "eas": {
+        "projectId": "c6791d08-4c17-4271-bfb3-b15fa97abaa0"
+      }
+    }
   }
 }

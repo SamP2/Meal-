@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Good Morning, Foodie - Nutritional Hospitality</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#ff6b35",
+                    "on-background": "#261814",
+                    "surface-container-low": "#fff1ed",
+                    "tertiary-container": "#00a7cb",
+                    "surface-dim": "#eed5cd",
+                    "on-tertiary-fixed-variant": "#004e60",
+                    "surface-variant": "#f7ddd5",
+                    "secondary": "#635d58",
+                    "background": "#fff8f6",
+                    "outline": "#8d7168",
+                    "primary-fixed-dim": "#ffb59d",
+                    "primary": "#ab3500",
+                    "outline-variant": "#e1bfb5",
+                    "on-primary-fixed-variant": "#832600",
+                    "inverse-primary": "#ffb59d",
+                    "on-secondary-fixed-variant": "#4b4641",
+                    "on-error": "#ffffff",
+                    "surface-container-highest": "#f7ddd5",
+                    "inverse-surface": "#3c2d28",
+                    "primary-fixed": "#ffdbd0",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed": "#b5ebff",
+                    "secondary-fixed": "#eae1da",
+                    "on-surface": "#261814",
+                    "tertiary-fixed-dim": "#59d5fb",
+                    "on-secondary-container": "#69635e",
+                    "on-error-container": "#93000a",
+                    "on-tertiary": "#ffffff",
+                    "secondary-container": "#eae1da",
+                    "surface-bright": "#fff8f6",
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed": "#390c00",
+                    "surface": "#fff8f6",
+                    "error-container": "#ffdad6",
+                    "surface-tint": "#ab3500",
+                    "inverse-on-surface": "#ffede8",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container": "#ffe9e3",
+                    "on-secondary-fixed": "#1f1b17",
+                    "on-secondary": "#ffffff",
+                    "on-primary-container": "#5f1900",
+                    "surface-container-high": "#fde3db",
+                    "on-surface-variant": "#594139",
+                    "tertiary": "#00677e",
+                    "on-tertiary-container": "#003744",
+                    "on-tertiary-fixed": "#001f28",
+                    "secondary-fixed-dim": "#cdc5be"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "12px",
+                    "2xl": "16px",
+                    "3xl": "20px",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "base": "8px",
+                    "md": "16px",
+                    "xs": "4px",
+                    "gutter": "16px",
+                    "lg": "24px",
+                    "sm": "12px",
+                    "container-padding": "20px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "h3": ["Plus Jakarta Sans"],
+                    "h2": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "h1": ["Plus Jakarta Sans"],
+                    "caption": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "h3": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "h2": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "h1": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "caption": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scale-up-102-on-click:active {
+            transform: scale(1.02);
+        }
+        body {
+            min-height: 100dvh;
+            background-color: #FFF7F2;
+        }
+    </style>
+</head>
+<body class="text-on-background font-body-md pb-24">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center px-5 py-4 w-full fixed top-0 z-50 bg-[#F4EBE4] dark:bg-stone-950 shadow-[0px_4px_20px_rgba(255,107,53,0.05)]">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-orange-600 dark:text-orange-400" data-icon="location_on">location_on</span>
+<h1 class="font-['Plus_Jakarta_Sans'] text-base font-semibold text-orange-600 dark:text-orange-400">Good Morning, Foodie</h1>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-primary overflow-hidden shadow-sm">
+<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9-KTh36VsGUNVtW-Nevrw4yf8ahUNJiAbeQ6g3_jQK0CJydqZoeuCGPeTFhgQr1c_ZrZfmkMIl3ElJnx6t2nw1qgmKi2ENrKze3HTZrYW6eF5eXBbO7-TrA5B04IiA8KQwQPXCsz4_ffXjqVt0lFxP_JLYT6Z3yMciF1zyRRftAKW0Ax17FoASs7mPW6fOtWzwzx55pKRCnny_e3B425LgLLSDqsvevZuZhA3W9uE0ZtZozLFUfCMMS-VA65FBtf-0e3o9K4ya1o"/>
+</div>
+</header>
+<main class="mt-20 px-container-padding space-y-lg">
+<!-- Hero Dynamic Greeting & Search -->
+<div class="space-y-md">
+<div class="space-y-xs">
+<h2 class="font-h1 text-h1 text-on-surface">What's for Lunch?</h2>
+<p class="font-body-md text-on-surface-variant">Find the best home-cooked messes near you.</p>
+</div>
+<!-- Search Bar -->
+<div class="relative flex items-center bg-[#F4EBE4] rounded-xl px-md py-sm shadow-[0px_4px_20px_rgba(255,107,53,0.05)] border-2 border-transparent focus-within:border-primary transition-all">
+<span class="material-symbols-outlined text-outline" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 w-full font-body-md text-on-surface ml-2 placeholder:text-outline" placeholder="Search mess, dish or area..." type="text"/>
+<span class="material-symbols-outlined text-primary" data-icon="tune">tune</span>
+</div>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-3 overflow-x-auto hide-scrollbar -mx-container-padding px-container-padding py-1">
+<button class="flex-shrink-0 bg-primary-container text-white px-6 py-2.5 rounded-full font-label-md shadow-md scale-up-102-on-click transition-transform">Popular</button>
+<button class="flex-shrink-0 bg-white border border-primary-container text-primary px-6 py-2.5 rounded-full font-label-md scale-up-102-on-click transition-transform">Nearby</button>
+<button class="flex-shrink-0 bg-white border border-primary-container text-primary px-6 py-2.5 rounded-full font-label-md scale-up-102-on-click transition-transform">Budget</button>
+<button class="flex-shrink-0 bg-white border border-primary-container text-primary px-6 py-2.5 rounded-full font-label-md scale-up-102-on-click transition-transform">Pure Veg</button>
+<button class="flex-shrink-0 bg-white border border-primary-container text-primary px-6 py-2.5 rounded-full font-label-md scale-up-102-on-click transition-transform">Rating 4.5+</button>
+</div>
+<!-- Best Pick Card -->
+<section class="space-y-md">
+<h3 class="font-h2 text-h2">Today's Best Pick</h3>
+<div class="bg-white rounded-3xl overflow-hidden shadow-[0px_4px_24px_rgba(255,107,53,0.08)] group transition-all duration-300">
+<div class="relative h-56">
+<img alt="Traditional Thali" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCDyDKP4PreSmB6vVOHUAqp8W2ECmi6VUenjy1FuGb2BQi2Fg181nxnBLQP7aBk1IBA4w35n9011OjNjclLGt2gSt3wVqy3g8EK9l089v8uM8Cc65CMvJtFjWTPhvNEJ5tnJGFxqNsnRaJ6BU8VzrbUEaAaxz4IvSbedNwrWWQzQK_c4W6ju9a9eAWk3bPhUngWYxNmQu5I_xons72Xajk6Mv9kbvcgD2ZMh4ZpBpjxgUiFBhyuVsEgprhMg9LrQ3yOy5rjGVb9kE"/>
+<div class="absolute top-4 right-4 bg-primary-container/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-bold shadow-md">
+                    ₹120
+                </div>
+</div>
+<div class="p-lg space-y-sm">
+<div class="flex justify-between items-start">
+<h4 class="font-h2 text-xl font-bold text-on-surface group-hover:text-primary transition-colors">Annapurna Executive Mess</h4>
+</div>
+<div class="flex items-center gap-1">
+<span class="text-sm">⭐</span>
+<span class="font-label-md text-on-surface">4.6 • 0.7 km</span>
+</div>
+<p class="font-body-md text-on-surface-variant line-clamp-2">Authentic Maharashtrian flavors with unlimited rotis and home-ground spices. Perfectly balanced nutrition.</p>
+<div class="flex items-center gap-md pt-xs">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="font-caption text-secondary">Lunch Special</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+<span class="font-caption text-secondary">Dinner Available</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Messes Near You List -->
+<section class="space-y-md">
+<div class="flex justify-between items-center">
+<h3 class="font-h2 text-h2">Messes Near You</h3>
+<button class="font-label-md text-primary hover:underline">View all</button>
+</div>
+<div class="grid grid-cols-1 gap-md">
+<!-- Mess Item 1 -->
+<div class="bg-white p-4 rounded-2xl flex gap-4 shadow-[0px_4px_16px_rgba(0,0,0,0.04)] border border-transparent hover:border-primary-container transition-all">
+<img alt="Royal Kitchen Interior" class="w-24 h-24 rounded-xl object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyM3yWxcBssRn1gVQhVsGezWTcHTGfWDcl_GMrXttb3zGfTY3IN6cQ8eeYV9cQ2EQTkj_Axi7YH6hNvlrJC6-tJAnrtRU7KEgg8_2rx4E1VyZJ6bvzfxIKDd7L_l0wNiL_PqeJASKaSYWyX7euEaZ9CAKIGVevl7xsLXa0mZd33tqG0c1WzOmGRgF1rPruSCD17LxZAeNoBl4b3pAs0XulEfVBa16molu_sb9lJtq2La21T9iBfjNyuIQZzy8RPXxbQhIB_7135oY"/>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start">
+<h5 class="text-base font-bold text-on-surface">Royal Kitchen</h5>
+<span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Open Now</span>
+</div>
+<p class="font-caption text-on-surface-variant">North Indian • 0.4 km away</p>
+</div>
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-1">
+<span class="text-xs">⭐</span>
+<span class="font-label-md text-on-surface">4.8</span>
+</div>
+<span class="font-label-md text-primary font-bold">₹90/meal</span>
+</div>
+</div>
+</div>
+<!-- Mess Item 2 -->
+<div class="bg-white p-4 rounded-2xl flex gap-4 shadow-[0px_4px_16px_rgba(0,0,0,0.04)] border border-transparent hover:border-primary-container transition-all">
+<img alt="Saraswati Dining Food" class="w-24 h-24 rounded-xl object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAR_0S9D85YzCTVMcT7LHy1FeLyZTJVHcM2cyTZXNqaMqFEENKcdmOQOZ8s6JJa91eCUnCURGU9jfoHOPvH4NzeaIX4LV1xoJyDnXTJlJeHchuV30SgR9QcmKmprXVeBWJ3Ig3tedp-FIgbzbPsw0kqBOBNsZ7CknBrva1QPkWlAGAoqMztnQ1hCyy8VvKjMpWqX58Ekg2UTDVBVXREL4RhtGAfY0R4JBpQwZgwqAHcImosy9Eyg1DFWct4E-7Cy6c1ScArmGKqNQs"/>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start">
+<h5 class="text-base font-bold text-on-surface">Saraswati Dining</h5>
+<span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Lunch Available</span>
+</div>
+<p class="font-caption text-on-surface-variant">Pure Veg • 1.2 km away</p>
+</div>
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-1">
+<span class="text-xs">⭐</span>
+<span class="font-label-md text-on-surface">4.2</span>
+</div>
+<span class="font-label-md text-primary font-bold">₹110/meal</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Map Section -->
+<section class="space-y-md">
+<h3 class="font-h2 text-h2">📍 Explore on Map</h3>
+<div class="relative h-48 w-full rounded-3xl overflow-hidden shadow-[0px_8px_24px_rgba(255,107,53,0.1)]">
+<img alt="Map view" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuApY44IqnCz141K6KxlUIX5PvED1yuVVH0KLj6KfHcS2CON3flI2CQTF-ChN1GJy4sWl5ZoOCc0FLmuk3FHExnLQuTl69Vh8p2Q3aFv2K1-c71SvbJtXydll0POlF5SUqwQodkCqhVqad4TMqcE8OuVDmQY7_enCpJNJE9LlI1vJkk6wY2IeWpuCl_dkavlMCxL3lTj1J8YOpcRSFS12ilWrYL2bx5-uoiCb5h-svxEK2AEtxyROi-MZf98grAoTW6pVRrd_Zvkjfg"/>
+<div class="absolute inset-0 bg-black/10 flex items-center justify-center">
+<button class="bg-white text-on-surface font-label-md px-6 py-3 rounded-full shadow-xl flex items-center gap-2 active:scale-95 transition-all">
+                    View full map →
+                </button>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-white dark:bg-stone-900 border-t border-[#F4EBE4] dark:border-stone-800 shadow-[0px_-4px_20px_rgba(255,107,53,0.08)] rounded-t-[24px]">
+<div class="flex flex-col items-center justify-center text-primary rounded-xl px-3 py-1 active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="explore" style="font-variation-settings: 'FILL' 1;">explore</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] font-bold">Discover</span>
+</div>
+<div class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 hover:text-orange-500 transition-colors active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] font-medium">Search</span>
+</div>
+<div class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 hover:text-orange-500 transition-colors active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="restaurant">restaurant</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] font-medium">My Meals</span>
+</div>
+<div class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 hover:text-orange-500 transition-colors active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] font-medium">Profile</span>
+</div>
+</nav>
+</body></html>

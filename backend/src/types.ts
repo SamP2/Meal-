@@ -2,6 +2,8 @@
 
 export type UserRole = 'student' | 'mess_owner';
 
+export type VerificationStatus = 'pending' | 'verified' | 'rejected';
+
 export interface User {
   id: string;
   role: UserRole;
@@ -23,8 +25,11 @@ export interface Mess {
   is_open: boolean;
   is_veg: boolean;
   is_verified: boolean;
+  verified: boolean;
+  verification_status: VerificationStatus;
+  fssai_number: string | null;
   cuisine: string;
-  cover_image: string | null;
+  cover_image_url: string | null;
   rating: number;
   review_count: number;
   created_at: string;
@@ -81,7 +86,8 @@ export interface CreateMessBody {
   price_range?: string;
   cuisine?: string;
   is_veg?: boolean;
-  cover_image?: string;
+  cover_image_url?: string;
+  fssai_number?: string;
 }
 
 export interface MenuItemInput {

@@ -1,240 +1,295 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, Image, TouchableOpacity, Linking, TextInput } from 'react-native';
-import { useTheme } from '../../context/ThemeContext';
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Linking,
+  SafeAreaView,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import apiClient from '../../api/client';
-import { spacing, fontSize, fontWeight, radius, shadow } from '../../theme';
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 interface Mess {
-  id: string; name: string; description: string | null; address: string;
-  opening_time: string; closing_time: string; price_range: string | null;
-  is_open: boolean; is_verified: boolean; is_veg: boolean; cuisine: string;
-  rating: number; review_count: number; distance_km?: number;
-  cover_image: string | null; latitude: number; longitude: number;
+  id: string;
+  name: string;
+  address: string;
+  distance_km: number;
+  is_open: boolean;
+  verified: boolean;
+  price_range: string | null;
+  rating: number;
+  is_veg: boolean;
+  cuisine: string;
+  latitude?: number;
+  longitude?: number;
+  cover_image_url?: string | null;
+  lunch:  { items: string[]; price: number } | null;
+  dinner: { items: string[]; price: number } | null;
 }
 
-interface MenuItem { id: string; name: string; description: string | null; price: number; image: string | null; }
-interface Review { id: string; rating: number; comment: string | null; created_at: string; student_id: string; }
+interface EverydayMenuItem {
+  id: string;
+  name: string;
+  price: number;
+}
 
-const TABS = ["Today's Menu", 'Reviews'];
+// ─── Component ────────────────────────────────────────────────────────────────
+export default function MessDetailScreen({ route }: any) {
+  const { mess } = route.params as { mess: Mess };
+  const [everydayItems, setEverydayItems] = React.useState<EverydayMenuItem[]>([]);
+  const [loadingEveryday, setLoadingEveryday] = React.useState(true);
 
-export default function MessDetailScreen({ route, navigation }: any) {
-  const { messId } = route.params;
-  const { colors } = useTheme();
-  const [mess, setMess] = useState<Mess | null>(null);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [activeTab, setActiveTab] = useState("Today's Menu");
-  const [loading, setLoading] = useState(true);
-  const [myRating, setMyRating] = useState(0);
-  const [myComment, setMyComment] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const today = new Date().toISOString().split('T')[0];
+  React.useEffect(() => {
+    loadEverydayMenu();
+  }, []);
 
-  useEffect(() => {
-    Promise.all([
-      apiClient.get(`/messes/${messId}`),
-      apiClient.get(`/messes/${messId}/menu`, { params: { date: today } }),
-      apiClient.get(`/messes/${messId}/reviews`),
-    ]).then(([messRes, menuRes, reviewRes]) => {
-      setMess(messRes.data);
-      setMenuItems(menuRes.data.items ?? []);
-      setReviews(reviewRes.data ?? []);
-    }).catch(() => Alert.alert('Error', 'Could not load mess details'))
-      .finally(() => setLoading(false));
-  }, [messId]);
-
-  const submitReview = async () => {
-    if (myRating === 0) { Alert.alert('Rate first', 'Please select a star rating'); return; }
-    setSubmitting(true);
+  const loadEverydayMenu = async () => {
     try {
-      await apiClient.post(`/messes/${messId}/reviews`, { rating: myRating, comment: myComment });
-      const { data } = await apiClient.get(`/messes/${messId}/reviews`);
-      setReviews(data);
-      setMyRating(0); setMyComment('');
-      Alert.alert('Thanks!', 'Your review has been submitted.');
-    } catch { Alert.alert('Error', 'Could not submit review'); }
-    finally { setSubmitting(false); }
+      const { data } = await apiClient.get(`/messes/${mess.id}/everyday-menu`);
+      setEverydayItems(data || []);
+    } catch {
+      // silently fail — everyday menu is optional
+    } finally {
+      setLoadingEveryday(false);
+    }
   };
 
-  if (loading) return <View style={[styles.center, { backgroundColor: colors.background }]}><ActivityIndicator size="large" color={colors.primary} /></View>;
-  if (!mess) return <View style={[styles.center, { backgroundColor: colors.background }]}><Text style={{ color: colors.textSecondary }}>Mess not found</Text></View>;
+  const handleGetDirections = () => {
+    if (mess.latitude && mess.longitude) {
+      const url = `https://www.google.com/maps/search/?api=1&query=${mess.latitude},${mess.longitude}`;
+      Linking.openURL(url);
+    }
+  };
 
-  return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} showsVerticalScrollIndicator={false}>
-      {/* Hero */}
-      <View style={styles.hero}>
-        {mess.cover_image
-          ? <Image source={{ uri: mess.cover_image }} style={styles.heroImage} />
-          : <View style={[styles.heroPlaceholder, { backgroundColor: colors.primary }]}><Text style={styles.heroEmoji}>🍽️</Text></View>
-        }
-        <View style={styles.heroOverlay} />
-        <View style={styles.heroContent}>
-          <View style={styles.heroBadges}>
-            <View style={[styles.statusBadge, { backgroundColor: mess.is_open ? colors.primary : colors.error }]}>
-              <Text style={styles.statusText}>{mess.is_open ? 'Open Now' : 'Closed'}</Text>
-            </View>
-            {mess.is_verified && <View style={[styles.verifiedBadge, { backgroundColor: 'rgba(255,255,255,0.9)' }]}><Text style={styles.verifiedText}>✓ Verified</Text></View>}
-          </View>
-          <Text style={styles.heroName}>{mess.name}</Text>
-          {mess.description && <Text style={styles.heroDesc}>{mess.description}</Text>}
-        </View>
-      </View>
-
-      {/* Info strip */}
-      <View style={[styles.infoStrip, { backgroundColor: colors.surface }, shadow.sm]}>
-        <View style={styles.infoItem}>
-          <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Distance</Text>
-          <Text style={[styles.infoValue, { color: colors.text }]}>📍 {mess.distance_km?.toFixed(2) ?? '—'} km</Text>
-        </View>
-        <View style={[styles.infoDivider, { backgroundColor: colors.border }]} />
-        <View style={styles.infoItem}>
-          <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Hours</Text>
-          <Text style={[styles.infoValue, { color: colors.text }]}>🕐 {mess.opening_time}–{mess.closing_time}</Text>
-        </View>
-        <View style={[styles.infoDivider, { backgroundColor: colors.border }]} />
-        <TouchableOpacity style={styles.directionsBtn} onPress={() => Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${mess.latitude},${mess.longitude}`)}>
-          <Text style={[styles.directionsBtnText, { color: colors.primary }]}>🧭 Directions</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Tabs */}
-      <View style={[styles.tabs, { borderBottomColor: colors.border }]}>
-        {TABS.map(tab => (
-          <TouchableOpacity key={tab} style={styles.tab} onPress={() => setActiveTab(tab)}>
-            <Text style={[styles.tabText, { color: activeTab === tab ? colors.primary : colors.textSecondary }]}>{tab}</Text>
-            {activeTab === tab && <View style={[styles.tabIndicator, { backgroundColor: colors.primary }]} />}
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Tab content */}
-      <View style={styles.tabContent}>
-        {activeTab === "Today's Menu" && (
-          menuItems.length === 0
-            ? <View style={styles.emptyTab}><Text style={styles.emptyEmoji}>🤷</Text><Text style={[styles.emptyText, { color: colors.textSecondary }]}>No menu set for today</Text></View>
-            : menuItems.map(item => (
-              <View key={item.id} style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                {item.image && <Image source={{ uri: item.image }} style={styles.menuItemImage} />}
-                <View style={styles.menuItemInfo}>
-                  <Text style={[styles.menuItemName, { color: colors.text }]}>{item.name}</Text>
-                  {item.description && <Text style={[styles.menuItemDesc, { color: colors.textSecondary }]}>{item.description}</Text>}
-                </View>
-                <Text style={[styles.menuItemPrice, { color: colors.primary }]}>₹{item.price}</Text>
-              </View>
-            ))
-        )}
-
-        {activeTab === 'Reviews' && (
-          <View>
-            {/* Rating summary */}
-            <View style={[styles.ratingSummary, { backgroundColor: colors.primaryLight }]}>
-              <Text style={[styles.ratingBig, { color: colors.primary }]}>{mess.rating > 0 ? mess.rating.toFixed(1) : '—'}</Text>
-              <View>
-                <View style={styles.stars}>
-                  {[1,2,3,4,5].map(s => <Text key={s} style={{ fontSize: 18, color: s <= Math.round(mess.rating) ? colors.accent : colors.border }}>★</Text>)}
-                </View>
-                <Text style={[styles.reviewCount, { color: colors.textSecondary }]}>Based on {mess.review_count} reviews</Text>
-              </View>
-            </View>
-
-            {/* Write review */}
-            <View style={[styles.writeReview, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.writeReviewTitle, { color: colors.text }]}>Write a Review</Text>
-              <View style={styles.starPicker}>
-                {[1,2,3,4,5].map(s => (
-                  <TouchableOpacity key={s} onPress={() => setMyRating(s)}>
-                    <Text style={{ fontSize: 32, color: s <= myRating ? colors.accent : colors.border }}>★</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              <TextInput
-                style={[styles.commentInput, { backgroundColor: colors.surfaceSecondary, color: colors.text, borderColor: colors.border }]}
-                placeholder="Share your experience..."
-                placeholderTextColor={colors.textSecondary}
-                value={myComment}
-                onChangeText={setMyComment}
-                multiline
-                numberOfLines={3}
-              />
-              <TouchableOpacity style={[styles.submitBtn, { backgroundColor: colors.primary }]} onPress={submitReview} disabled={submitting}>
-                <Text style={styles.submitBtnText}>{submitting ? 'Submitting...' : 'Submit Review'}</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Reviews list */}
-            {reviews.map(r => (
-              <View key={r.id} style={[styles.reviewCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <View style={styles.reviewHeader}>
-                  <View style={[styles.reviewAvatar, { backgroundColor: colors.primaryLight }]}>
-                    <Text style={[styles.reviewAvatarText, { color: colors.primary }]}>👤</Text>
-                  </View>
-                  <View style={styles.reviewStars}>
-                    {[1,2,3,4,5].map(s => <Text key={s} style={{ fontSize: 12, color: s <= r.rating ? colors.accent : colors.border }}>★</Text>)}
-                  </View>
-                  <Text style={[styles.reviewDate, { color: colors.textSecondary }]}>{new Date(r.created_at).toLocaleDateString()}</Text>
-                </View>
-                {r.comment && <Text style={[styles.reviewComment, { color: colors.text }]}>{r.comment}</Text>}
+  const renderMenuSection = (
+    title: string,
+    emoji: string,
+    menu: { items: string[]; price: number } | null
+  ) => (
+    <View style={s.menuCard}>
+      <Text style={s.menuTitle}>{emoji} {title}</Text>
+      {menu && menu.items && menu.items.length > 0 ? (
+        <View style={s.menuContent}>
+          <View style={s.menuItems}>
+            {menu.items.map((item, index) => (
+              <View key={index} style={s.menuItemRow}>
+                <Text style={s.menuBullet}>•</Text>
+                <Text style={s.menuItemText}>{item}</Text>
               </View>
             ))}
           </View>
+          <View style={s.menuPriceRow}>
+            <Text style={s.menuPriceLabel}>Price</Text>
+            <Text style={s.menuPrice}>₹{menu.price}</Text>
+          </View>
+        </View>
+      ) : (
+        <View style={s.noMenu}>
+          <Text style={s.noMenuEmoji}>📋</Text>
+          <Text style={s.noMenuText}>No {title.toLowerCase()} menu today</Text>
+          <Text style={s.noMenuSub}>Check back later or contact the mess</Text>
+        </View>
+      )}
+    </View>
+  );
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  return (
+    <SafeAreaView style={s.root}>
+      <ScrollView style={s.scroll} showsVerticalScrollIndicator={false}>
+
+        {/* Cover Image */}
+        {mess.cover_image_url ? (
+          <Image source={{ uri: mess.cover_image_url }} style={s.coverImage} resizeMode="cover" />
+        ) : (
+          <View style={s.coverPlaceholder}>
+            <Text style={s.coverPlaceholderEmoji}>🍽️</Text>
+          </View>
         )}
-      </View>
-    </ScrollView>
+
+        {/* Header */}
+        <View style={s.header}>
+          <View style={s.headerTop}>
+            <View style={s.nameBlock}>
+              <Text style={s.messName}>{mess.name}</Text>
+              {mess.verified
+                ? <Text style={s.verifiedBadge}>✓ Verified</Text>
+                : <Text style={s.pendingBadge}>⏳ Pending Review</Text>
+              }
+            </View>
+            <View style={[s.statusBadge, mess.is_open ? s.statusOpen : s.statusClosed]}>
+              <Text style={[s.statusText, mess.is_open ? s.statusTextOpen : s.statusTextClosed]}>
+                {mess.is_open ? 'OPEN' : 'CLOSED'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={s.infoRow}>
+            <Text style={s.infoText}>📍 {mess.distance_km.toFixed(1)} km</Text>
+            <Text style={s.dot}>•</Text>
+            <Text style={s.infoText}>{mess.cuisine}</Text>
+            <Text style={s.dot}>•</Text>
+            <Text style={s.infoText}>⭐ {mess.rating.toFixed(1)}</Text>
+          </View>
+
+          {mess.price_range && (
+            <Text style={s.priceRange}>{mess.price_range}</Text>
+          )}
+
+          <Text style={s.address}>{mess.address}</Text>
+        </View>
+
+        {/* Directions */}
+        {mess.latitude && mess.longitude && (
+          <TouchableOpacity style={s.directionsBtn} onPress={handleGetDirections} activeOpacity={0.85}>
+            <Text style={s.directionsBtnText}>🧭 Get Directions</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Today's Menu */}
+        <View style={s.section}>
+          {renderMenuSection('Lunch', '🍛', mess.lunch)}
+          {renderMenuSection('Dinner', '🌙', mess.dinner)}
+        </View>
+
+        {/* Everyday Menu */}
+        <View style={s.everydayCard}>
+          <Text style={s.everydayTitle}>📋 Everyday Menu</Text>
+          <Text style={s.everydaySub}>Always available items</Text>
+
+          {loadingEveryday ? (
+            <ActivityIndicator size="small" color="#0369A1" style={{ marginTop: 12 }} />
+          ) : everydayItems.length > 0 ? (
+            <View style={s.everydayList}>
+              {everydayItems.map(item => (
+                <View key={item.id} style={s.everydayItem}>
+                  <Text style={s.everydayItemName}>• {item.name}</Text>
+                  <Text style={s.everydayItemPrice}>₹{item.price}</Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={s.everydayEmpty}>No everyday items listed</Text>
+          )}
+        </View>
+
+        {/* Bottom padding */}
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  hero: { height: 320, position: 'relative' },
-  heroImage: { width: '100%', height: '100%' },
-  heroPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  heroEmoji: { fontSize: 80 },
-  heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)' },
-  heroContent: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: spacing.lg },
-  heroBadges: { flexDirection: 'row', gap: 8, marginBottom: spacing.sm },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full },
-  statusText: { color: '#fff', fontSize: fontSize.xs, fontWeight: fontWeight.extrabold, textTransform: 'uppercase' },
-  verifiedBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full },
-  verifiedText: { fontSize: fontSize.xs, fontWeight: fontWeight.extrabold, color: '#0d9488' },
-  heroName: { fontSize: 32, fontWeight: fontWeight.extrabold, color: '#fff', letterSpacing: -0.5, lineHeight: 36 },
-  heroDesc: { color: 'rgba(255,255,255,0.8)', fontSize: fontSize.sm, marginTop: 4 },
-  infoStrip: { flexDirection: 'row', alignItems: 'center', margin: spacing.md, borderRadius: radius.xl, padding: spacing.md },
-  infoItem: { flex: 1, alignItems: 'center' },
-  infoLabel: { fontSize: fontSize.xs, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
-  infoValue: { fontSize: fontSize.sm, fontWeight: fontWeight.bold },
-  infoDivider: { width: 1, height: 32, marginHorizontal: spacing.sm },
-  directionsBtn: { flex: 1, alignItems: 'center' },
-  directionsBtnText: { fontSize: fontSize.sm, fontWeight: fontWeight.bold },
-  tabs: { flexDirection: 'row', paddingHorizontal: spacing.lg, borderBottomWidth: 1 },
-  tab: { flex: 1, alignItems: 'center', paddingVertical: spacing.md, position: 'relative' },
-  tabText: { fontSize: fontSize.sm, fontWeight: fontWeight.bold },
-  tabIndicator: { position: 'absolute', bottom: 0, left: '20%', right: '20%', height: 2, borderRadius: 1 },
-  tabContent: { padding: spacing.md },
-  emptyTab: { alignItems: 'center', paddingVertical: spacing.xxl },
-  emptyEmoji: { fontSize: 48, marginBottom: spacing.md },
-  emptyText: { fontSize: fontSize.md },
-  menuItem: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, borderRadius: radius.lg, marginBottom: spacing.sm, borderWidth: 1 },
-  menuItemImage: { width: 56, height: 56, borderRadius: radius.md, marginRight: spacing.md },
-  menuItemInfo: { flex: 1 },
-  menuItemName: { fontSize: fontSize.md, fontWeight: fontWeight.semibold },
-  menuItemDesc: { fontSize: fontSize.xs, marginTop: 2 },
-  menuItemPrice: { fontSize: fontSize.lg, fontWeight: fontWeight.extrabold },
-  ratingSummary: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, padding: spacing.lg, borderRadius: radius.xl, marginBottom: spacing.md },
-  ratingBig: { fontSize: 48, fontWeight: fontWeight.extrabold },
-  stars: { flexDirection: 'row', gap: 2 },
-  reviewCount: { fontSize: fontSize.xs, marginTop: 4 },
-  writeReview: { padding: spacing.lg, borderRadius: radius.xl, marginBottom: spacing.md },
-  writeReviewTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, marginBottom: spacing.sm },
-  starPicker: { flexDirection: 'row', gap: 4, marginBottom: spacing.md },
-  commentInput: { borderWidth: 1, borderRadius: radius.md, padding: spacing.md, fontSize: fontSize.md, marginBottom: spacing.md, minHeight: 80, textAlignVertical: 'top' },
-  submitBtn: { padding: spacing.md, borderRadius: radius.lg, alignItems: 'center' },
-  submitBtnText: { color: '#fff', fontSize: fontSize.md, fontWeight: fontWeight.semibold },
-  reviewCard: { padding: spacing.md, borderRadius: radius.lg, marginBottom: spacing.sm, borderWidth: 1 },
-  reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
-  reviewAvatar: { width: 32, height: 32, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
-  reviewAvatarText: { fontSize: 16 },
-  reviewStars: { flexDirection: 'row', flex: 1 },
-  reviewDate: { fontSize: fontSize.xs },
-  reviewComment: { fontSize: fontSize.sm, lineHeight: 20 },
+// ─── Styles ───────────────────────────────────────────────────────────────────
+const s = StyleSheet.create({
+  root:   { flex: 1, backgroundColor: '#FFF8F6' },
+  scroll: { flex: 1 },
+
+  // Cover
+  coverImage: { width: '100%', height: 240, backgroundColor: '#F4EBE4' },
+  coverPlaceholder: {
+    width: '100%', height: 180,
+    backgroundColor: '#F4EBE4',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  coverPlaceholderEmoji: { fontSize: 64 },
+
+  // Header
+  header: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F4EBE4',
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+    gap: 12,
+  },
+  nameBlock: { flex: 1 },
+  messName: { fontSize: 24, fontWeight: '800', color: '#261814', lineHeight: 30, marginBottom: 4 },
+  verifiedBadge: { fontSize: 13, fontWeight: '600', color: '#10B981' },
+  pendingBadge:  { fontSize: 13, fontWeight: '600', color: '#F59E0B' },
+  statusBadge:   { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, flexShrink: 0 },
+  statusOpen:    { backgroundColor: '#D1FAE5' },
+  statusClosed:  { backgroundColor: '#FED7AA' },
+  statusText:    { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
+  statusTextOpen:   { color: '#065F46' },
+  statusTextClosed: { color: '#9A3412' },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  infoText: { fontSize: 14, color: '#594139', fontWeight: '500' },
+  dot: { fontSize: 14, color: '#8B7A72' },
+  priceRange: { fontSize: 13, color: '#8B7A72', marginBottom: 6 },
+  address: { fontSize: 13, color: '#8B7A72', lineHeight: 18, marginTop: 4 },
+
+  // Directions
+  directionsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#AB3500',
+    margin: 20,
+    marginBottom: 0,
+    padding: 16,
+    borderRadius: 14,
+    elevation: 2,
+  },
+  directionsBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+
+  // Menu section
+  section: { padding: 20, gap: 16 },
+  menuCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  menuTitle: { fontSize: 19, fontWeight: '700', color: '#261814', marginBottom: 14 },
+  menuContent: { gap: 14 },
+  menuItems: { gap: 8 },
+  menuItemRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  menuBullet: { fontSize: 16, color: '#AB3500', fontWeight: '700', marginTop: 2 },
+  menuItemText: { flex: 1, fontSize: 15, color: '#261814', lineHeight: 22 },
+  menuPriceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#F4EBE4',
+  },
+  menuPriceLabel: { fontSize: 14, fontWeight: '600', color: '#594139' },
+  menuPrice: { fontSize: 24, fontWeight: '800', color: '#AB3500' },
+  noMenu: { alignItems: 'center', paddingVertical: 20, gap: 6 },
+  noMenuEmoji: { fontSize: 28 },
+  noMenuText: { fontSize: 15, fontWeight: '600', color: '#594139' },
+  noMenuSub: { fontSize: 13, color: '#8B7A72' },
+
+  // Everyday menu
+  everydayCard: {
+    backgroundColor: '#F0F9FF',
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+  },
+  everydayTitle: { fontSize: 18, fontWeight: '700', color: '#0369A1', marginBottom: 2 },
+  everydaySub:   { fontSize: 12, color: '#0C4A6E', marginBottom: 14 },
+  everydayList:  { gap: 10 },
+  everydayItem:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
+  everydayItemName:  { flex: 1, fontSize: 14, color: '#0C4A6E', fontWeight: '500' },
+  everydayItemPrice: { fontSize: 15, fontWeight: '700', color: '#0369A1' },
+  everydayEmpty: { fontSize: 13, color: '#0C4A6E', fontStyle: 'italic', marginTop: 8 },
 });
