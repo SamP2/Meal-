@@ -44,6 +44,8 @@
     "extra": {
       "apiBaseUrl": "http://192.168.1.14:3000",
       "mapboxToken": "pk.eyJ1IjoibWVhbDIxIiwiYSI6ImNtb3pybHU5bDBpcW8ydHIyYmZ5dGEzbjQifQ.vLJWxO5g3DAGlqFmH1j79Q",
+      "supabaseUrl": "https://zhmzafxgoevhixkwajer.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpobXphZnhnb2V2aGl4a3dhamVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ2ODc1NjUsImV4cCI6MjA1MDI2MzU2NX0.LXi3FqkEXJ7eO2snqfV_yREkC1KrCi3BvzEKKCv-0vg",
       "eas": {
         "projectId": "c6791d08-4c17-4271-bfb3-b15fa97abaa0"
       }
