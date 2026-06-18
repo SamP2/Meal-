@@ -7,8 +7,9 @@ import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import apiClient from '../../api/client';
 import KeyboardAwareScreen from '../../components/KeyboardAwareScreen';
+import Constants from 'expo-constants';
 
-const MAPBOX_TOKEN = 'pk.eyJ1IjoibWVhbDIxIiwiYSI6ImNtb3pybHU5bDBpcW8ydHIyYmZ5dGEzbjQifQ.vLJWxO5g3DAGlqFmH1j79Q';
+const MAPBOX_TOKEN = Constants.expoConfig?.extra?.mapboxToken || '';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface SelectedLocation { lat: number; lng: number; label: string; }

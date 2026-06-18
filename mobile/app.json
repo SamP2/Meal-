@@ -43,6 +43,7 @@
     "plugins": ["expo-location"],
     "extra": {
       "apiBaseUrl": "http://192.168.1.14:3000",
+      "mapboxToken": "pk.eyJ1IjoibWVhbDIxIiwiYSI6ImNtb3pybHU5bDBpcW8ydHIyYmZ5dGEzbjQifQ.vLJWxO5g3DAGlqFmH1j79Q",
       "eas": {
         "projectId": "c6791d08-4c17-4271-bfb3-b15fa97abaa0"
       }
