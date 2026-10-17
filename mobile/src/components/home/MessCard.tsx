@@ -32,8 +32,8 @@ function MessCard({
   dinner,
   onPress,
 }: MessCardProps) {
-  const formattedDistance = distance.toFixed(1);
-  const formattedRating   = rating.toFixed(1);
+  const formattedDistance = (typeof distance === 'number' && !isNaN(distance)) ? distance.toFixed(1) : (Number(distance) || 0).toFixed(1);
+  const formattedRating   = (typeof rating === 'number' && !isNaN(rating)) ? rating.toFixed(1) : (Number(rating) || 4.5).toFixed(1);
   const hasValidImage     = image && !image.includes('placeholder');
 
   // Memoize menu preview — only recalculates when lunch/dinner change

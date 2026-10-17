@@ -111,19 +111,24 @@ router.get('/nearby', async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  if (!data || data.length === 0) {
-    console.log('⚠️ No messes found by PostGIS function');
-    res.json({ messes: [], message: 'No messes found nearby' });
+  let rawNearby = data;
+  if (!rawNearby || rawNearby.length === 0) {
+    console.log('⚠️ No messes within radius, falling back to all available messes in DB');
+    rawNearby = allMesses || [];
+  }
+
+  if (rawNearby.length === 0) {
+    res.json({ messes: [], message: 'No messes available' });
     return;
   }
 
   // Remove duplicates by ID and calculate distance
   const uniqueMesses = new Map();
-  (data as Array<Record<string, unknown>>).forEach((mess) => {
+  (rawNearby as Array<Record<string, unknown>>).forEach((mess) => {
     if (!uniqueMesses.has(mess.id)) {
       uniqueMesses.set(mess.id, {
         ...mess,
-        distance_km: parseFloat(haversineKm(studentLat, studentLng, mess.latitude as number, mess.longitude as number).toFixed(1)),
+        distance_km: parseFloat(haversineKm(studentLat, studentLng, (mess.latitude as number) || 18.5204, (mess.longitude as number) || 73.8567).toFixed(1)),
       });
     }
   });
@@ -155,24 +160,35 @@ router.get('/nearby-with-menus', async (req: Request, res: Response): Promise<vo
 
   try {
     // Get nearby messes
+    let rawMesses: any[] = [];
     const { data, error } = await supabase.rpc('get_nearby_messes', {
       student_lat: studentLat,
       student_lng: studentLng,
       radius_km: radiusKm,
     });
 
-    if (error || !data || data.length === 0) {
+    if (!error && Array.isArray(data) && data.length > 0) {
+      rawMesses = data;
+    } else {
+      // Fallback: If user is outside radius or in another city during testing, return all messes
+      const { data: allMesses } = await supabase.from('messes').select('*');
+      if (Array.isArray(allMesses)) {
+        rawMesses = allMesses;
+      }
+    }
+
+    if (rawMesses.length === 0) {
       res.json([]);
       return;
     }
 
     // Remove duplicates and calculate distance
     const uniqueMesses = new Map();
-    (data as Array<Record<string, unknown>>).forEach((mess) => {
+    (rawMesses as Array<Record<string, unknown>>).forEach((mess) => {
       if (!uniqueMesses.has(mess.id)) {
         uniqueMesses.set(mess.id, {
           ...mess,
-          distance_km: parseFloat(haversineKm(studentLat, studentLng, mess.latitude as number, mess.longitude as number).toFixed(1)),
+          distance_km: parseFloat(haversineKm(studentLat, studentLng, (mess.latitude as number) || 18.5204, (mess.longitude as number) || 73.8567).toFixed(1)),
         });
       }
     });

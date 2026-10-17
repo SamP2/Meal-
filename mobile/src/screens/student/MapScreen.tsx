@@ -10,7 +10,7 @@ import {
 import MapView, { Marker, Callout, PROVIDER_GOOGLE, UrlTile } from 'react-native-maps';
 import * as Location from 'expo-location';
 import apiClient from '../../api/client';
-import { MAP_TILE_URL } from '../../constants';
+import { MAP_TILE_URL, DEFAULT_SEARCH_RADIUS_KM } from '../../constants';
 
 interface Mess {
   id: string;
@@ -67,7 +67,7 @@ export default function MapScreen({ navigation }: any) {
         params: {
           lat: coords.latitude,
           lng: coords.longitude,
-          radius: 5, // 5 km — same as home screen
+          radius: DEFAULT_SEARCH_RADIUS_KM,
         },
       });
 

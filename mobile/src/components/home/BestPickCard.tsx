@@ -25,8 +25,10 @@ function BestPickCard({
   tags,
   onPress,
 }: BestPickCardProps) {
-  // Format distance to 1 decimal place
-  const formattedDistance = distance.toFixed(1);
+  // Safe format distance and rating
+  const formattedDistance = (typeof distance === 'number' && !isNaN(distance)) ? distance.toFixed(1) : (Number(distance) || 0).toFixed(1);
+  const formattedRating   = (typeof rating === 'number' && !isNaN(rating)) ? rating.toFixed(1) : (Number(rating) || 4.5).toFixed(1);
+  const safePrice         = Number(price) || 80;
   
   // Check if image is valid
   const hasValidImage = image && !image.includes('placeholder');
@@ -45,7 +47,7 @@ function BestPickCard({
           </View>
         )}
         <View style={styles.priceTag}>
-          <Text style={styles.priceText}>₹{price}</Text>
+          <Text style={styles.priceText}>₹{safePrice}</Text>
         </View>
       </View>
       
@@ -54,7 +56,7 @@ function BestPickCard({
         
         <View style={styles.metaRow}>
           <Text style={styles.rating}>⭐</Text>
-          <Text style={styles.metaText}>{rating.toFixed(1)} • {formattedDistance} km</Text>
+          <Text style={styles.metaText}>{formattedRating} • {formattedDistance} km</Text>
         </View>
         
         <Text style={styles.description} numberOfLines={2}>

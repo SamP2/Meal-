@@ -19,6 +19,7 @@ import BestPickCard from '../../components/home/BestPickCard';
 import MapSection from '../../components/home/MapSection';
 import Header from '../../components/home/Header';
 import apiClient from '../../api/client';
+import { DEFAULT_SEARCH_RADIUS_KM } from '../../constants';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Mess {
@@ -123,7 +124,7 @@ export default function NewStudentHomeScreen({ navigation }: any) {
 
     try {
       const { data } = await apiClient.get('/messes/nearby-with-menus', {
-        params: { lat: loc.lat, lng: loc.lng, radius: 5 },
+        params: { lat: loc.lat, lng: loc.lng, radius: DEFAULT_SEARCH_RADIUS_KM },
       });
       setMesses(Array.isArray(data) ? data : []);
       initialLoadDone.current = true;
@@ -272,7 +273,7 @@ export default function NewStudentHomeScreen({ navigation }: any) {
                     <View style={s.suggestionText}>
                       <Text style={s.suggestionName} numberOfLines={1}>{mess.name}</Text>
                       <Text style={s.suggestionMeta} numberOfLines={1}>
-                        {mess.cuisine} · {mess.distance_km.toFixed(1)} km
+                        {mess.cuisine} · {(typeof mess.distance_km === 'number' ? mess.distance_km : (Number(mess.distance_km) || 0)).toFixed(1)} km
                       </Text>
                     </View>
                     <View style={[s.suggestionStatus, mess.is_open ? s.statusOpen : s.statusClosed]}>

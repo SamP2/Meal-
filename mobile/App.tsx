@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import BottomNavBar from './src/components/BottomNavBar';
+import ErrorBoundary from './src/components/ErrorBoundary';
 
 // Welcome
 import WelcomeScreen from './src/screens/WelcomeScreen';
@@ -173,11 +174,13 @@ function AppInner() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppInner />
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppInner />
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -1,7 +1,6 @@
 import React, { memo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE, UrlTile } from 'react-native-maps';
-import { MAP_TILE_URL } from '../../constants';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { MAPBOX_TOKEN } from '../../constants';
 
 interface MapSectionProps {
   userLocation?: { latitude: number; longitude: number };
@@ -28,59 +27,28 @@ function MapSection({ userLocation, messes = [], onViewFullMap }: MapSectionProp
     );
   }
 
+  // Generate Mapbox static map URL centered at user location
+  const staticMapUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s-star+ab3500(${userLocation.longitude},${userLocation.latitude})/${userLocation.longitude},${userLocation.latitude},13,0/600x300@2x?access_token=${MAPBOX_TOKEN}`;
+
   return (
     <TouchableOpacity 
       style={styles.container} 
       onPress={onViewFullMap} 
       activeOpacity={0.95}
     >
-      <MapView
-        provider={PROVIDER_GOOGLE}
+      <Image
+        source={{ uri: staticMapUrl }}
         style={styles.map}
-        initialRegion={{
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-          latitudeDelta: 0.1,
-          longitudeDelta: 0.1,
-        }}
-        scrollEnabled={false}
-        zoomEnabled={false}
-        pitchEnabled={false}
-        rotateEnabled={false}
-        pointerEvents="none"
-      >
-        <UrlTile
-          urlTemplate={MAP_TILE_URL}
-          tileSize={256}
-          maximumZ={19}
-          flipY={false}
-          shouldReplaceMapContent={true}
-        />
-
-        {/* User Location Marker */}
-        <Marker
-          coordinate={userLocation}
-          pinColor="#0EA5E9"
-        />
-
-        {/* Mess Markers (show first 10 for preview) */}
-        {messes.slice(0, 10).map((mess) => (
-          <Marker
-            key={mess.id}
-            coordinate={{
-              latitude: mess.latitude,
-              longitude: mess.longitude,
-            }}
-            pinColor={mess.verified ? '#10B981' : '#F59E0B'}
-          />
-        ))}
-      </MapView>
+        resizeMode="cover"
+      />
 
       {/* Overlay with button */}
       <View style={styles.overlay}>
         <View style={styles.button}>
           <Text style={styles.buttonIcon}>🗺️</Text>
-          <Text style={styles.buttonText}>View Full Map</Text>
+          <Text style={styles.buttonText}>
+            {messes.length > 0 ? `View ${messes.length} Messes on Map` : 'Explore on Map'}
+          </Text>
         </View>
       </View>
     </TouchableOpacity>
