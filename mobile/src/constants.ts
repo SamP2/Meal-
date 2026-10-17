@@ -5,7 +5,7 @@
 // API Configuration
 // Change this to your local machine's IP address when testing on physical device
 // Use 'localhost' for web, '10.0.2.2' for Android emulator, or your local IP for physical device
-export const API_BASE_URL = 'http://192.168.1.33:3000';
+export const API_BASE_URL = 'https://meal-backend-ds9s.onrender.com';
 
 // Location defaults for testing
 export const DEFAULT_TEST_LOCATION = {

@@ -42,7 +42,7 @@
       "expo-status-bar"
     ],
     "extra": {
-      "apiBaseUrl": "http://192.168.1.33:3000",
+      "apiBaseUrl": "https://meal-backend-ds9s.onrender.com",
       "mapboxToken": "pk.eyJ1IjoibWVhbDIxIiwiYSI6ImNtb3pybHU5bDBpcW8ydHIyYmZ5dGEzbjQifQ.vLJWxO5g3DAGlqFmH1j79Q",
       "supabaseUrl": "https://zhmzafxgoevhixkwajer.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpobXphZnhnb2V2aGl4a3dhamVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODA0NzYsImV4cCI6MjA5MTA1NjQ3Nn0.jlbolct9sJomjxZeGQEzL6zeC46BTfuCJo2CWoXST1I",
