@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Mess Finder",
-    "slug": "mess-finder",
+    "slug": "mealapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,7 +20,7 @@
       "newArchEnabled": false,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Mess Finder needs your location to show nearby messes."
-      },
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -31,7 +31,9 @@
       "newArchEnabled": false,
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "web": {
@@ -49,6 +51,7 @@
       "eas": {
         "projectId": "4e3e19e9-6051-43fb-b5d9-4d774979e9f1"
       }
-    }
+    },
+    "owner": "samdreamteam"
   }
 }
