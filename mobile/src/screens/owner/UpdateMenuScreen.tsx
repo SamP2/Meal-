@@ -80,8 +80,9 @@ export default function UpdateMenuScreen({ route, navigation }: any) {
       // silently fail — form stays empty
     } finally {
       // Populate form with the initial meal type
-      setItemsState(cache.current[initialMealType || 'lunch'].items);
-      setPriceState(cache.current[initialMealType || 'lunch'].price);
+      const initialType: 'lunch' | 'dinner' = initialMealType === 'dinner' ? 'dinner' : 'lunch';
+      setItemsState(cache.current[initialType].items);
+      setPriceState(cache.current[initialType].price);
       setFetching(false);
     }
   };

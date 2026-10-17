@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE, UrlTile } from 'react-native-maps';
+import { MAP_TILE_URL } from '../../constants';
 
 interface MapSectionProps {
   userLocation?: { latitude: number; longitude: number };
@@ -48,6 +49,14 @@ function MapSection({ userLocation, messes = [], onViewFullMap }: MapSectionProp
         rotateEnabled={false}
         pointerEvents="none"
       >
+        <UrlTile
+          urlTemplate={MAP_TILE_URL}
+          tileSize={256}
+          maximumZ={19}
+          flipY={false}
+          shouldReplaceMapContent={true}
+        />
+
         {/* User Location Marker */}
         <Marker
           coordinate={userLocation}
@@ -108,7 +117,7 @@ const styles = StyleSheet.create({
     color: '#594139',
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0, 0, 0, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',

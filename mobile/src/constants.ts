@@ -5,7 +5,7 @@
 // API Configuration
 // Change this to your local machine's IP address when testing on physical device
 // Use 'localhost' for web, '10.0.2.2' for Android emulator, or your local IP for physical device
-export const API_BASE_URL = 'http://192.168.1.14:3000';
+export const API_BASE_URL = 'http://192.168.1.33:3000';
 
 // Location defaults for testing
 export const DEFAULT_TEST_LOCATION = {
@@ -20,3 +20,8 @@ export const DEFAULT_SEARCH_RADIUS_KM = 50;
 // App info
 export const APP_NAME = 'Mess Finder';
 export const APP_VERSION = '1.0.0';
+
+// Mapbox Tile Configuration
+export const MAPBOX_TOKEN = 'pk.eyJ1IjoibWVhbDIxIiwiYSI6ImNtb3pybHU5bDBpcW8ydHIyYmZ5dGEzbjQifQ.vLJWxO5g3DAGlqFmH1j79Q';
+export const MAP_TILE_URL = `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`;
+
