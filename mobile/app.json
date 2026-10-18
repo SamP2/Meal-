@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mess Finder",
     "slug": "mealapp",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -28,6 +28,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.messfinder.app",
+      "versionCode": 2,
       "newArchEnabled": false,
       "permissions": [
         "ACCESS_FINE_LOCATION",
